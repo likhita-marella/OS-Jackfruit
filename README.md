@@ -18,20 +18,17 @@ Process lifecycle management via a supervisor daemon
 Structured logging using pipe + fork
 Kernel-level monitoring via /dev/container_monitor
 🏗️ Architecture
-┌─────────────────────────────────────────────┐
-│               engine (user-space)           │
-│                                             │
-│ CLI → Supervisor → Container Process        │
-│              │                              │
-│           Log Manager (pipe + fork)         │
-└──────────────┬──────────────────────────────┘
-               │ ioctl
-┌──────────────▼──────────────────────────────┐
-│         monitor.ko (kernel module)          │
-│                                             │
-│ /dev/container_monitor                      │
-│ Tracks PID & memory usage                   │
-└─────────────────────────────────────────────┘
+engine (user-space)
+ ├── CLI
+ ├── Supervisor
+ ├── Container Process (clone + namespaces)
+ └── Log Manager (pipe + fork)
+          │
+          │ ioctl
+          ▼
+monitor.ko (kernel module)
+ └── /dev/container_monitor
+     └── Tracks PID & memory usage
 ⚙️ Features
 run → Launch interactive container (foreground)
 start → Run container in background with logging
@@ -44,9 +41,9 @@ CI-safe build support
 📁 Project Structure
 .
 ├── boilerplate/
-│   ├── engine.c              # Runtime (user-space)
-│   ├── monitor.c             # Kernel module
-│   ├── monitor_ioctl.h       # Shared interface
+│   ├── engine.c
+│   ├── monitor.c
+│   ├── monitor_ioctl.h
 │   ├── Makefile
 │   ├── cpu_hog.c
 │   ├── memory_hog.c
@@ -55,21 +52,27 @@ CI-safe build support
 ├── rootfs-alpha/
 ├── rootfs-beta/
 └── README.md
+
 🛠️ Setup & Installation
+
 ✅ Requirements
+
 Ubuntu 22.04 / 24.04
 build-essential
 linux-headers
 Secure Boot OFF
 ❌ WSL not supported
-1️⃣ Install Dependencies
+
+1. Install Dependencies
 sudo apt update
 sudo apt install -y build-essential linux-headers-$(uname -r)
-2️⃣ Run Environment Check
+
+3. Run Environment Check
 cd boilerplate
 chmod +x environment-check.sh
 sudo ./environment-check.sh
-3️⃣ Prepare Root Filesystem
+
+5. Prepare Root Filesystem
 mkdir rootfs-base
 
 wget https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-minirootfs-3.20.3-x86_64.tar.gz
@@ -81,26 +84,27 @@ cp -a ./rootfs-base ./rootfs-beta
 
 ⚠️ Do NOT commit rootfs directories
 
-4️⃣ Build
+4. Build
 cd boilerplate
 make
 make ci
 ▶️ Usage
-🔹 Run Interactive Container
+Run Interactive Container
 sudo ./engine run alpha ../rootfs-alpha
-🔹 Start Background Container
+Start Background Container
 sudo ./engine start alpha ../rootfs-alpha
-🔹 List Containers
+List Containers
 ./engine ps
 
 Example:
 
 NAME     PID     UPTIME
 alpha    13245   00:02:14
-🔹 Stop Container
+Stop Container
 sudo ./engine stop alpha
-🔹 View Logs
+View Logs
 cat ../rootfs-alpha/logs/alpha.log
+
 🧠 Kernel Module
 Load / Unload
 sudo insmod monitor.ko
@@ -109,6 +113,7 @@ Verify Device
 ls /dev/container_monitor
 Kernel Logs
 dmesg | tail -20
+
 🧪 Workload Experiments
 Workload	Behavior
 cpu_hog	CPU intensive
@@ -118,38 +123,14 @@ Run
 ./cpu_hog
 ./memory_hog
 ./io_pulse
-Multi-container test
-sudo ./engine start alpha ../rootfs-alpha
-sudo ./engine start beta ../rootfs-beta
-⚡ Engineering Insights
-🔹 Namespace Isolation
 
-Uses:
+💡 Summary
 
-CLONE_NEWPID | CLONE_NEWNS | CLONE_NEWUTS | CLONE_NEWIPC
+This project demonstrates:
 
-Provides:
+Linux namespaces
+Process isolation
+Kernel-user interaction
+Scheduling behavior
 
-Independent PID space
-Isolated filesystem
-Unique hostname
-Separate IPC
-🔹 Logging System
-Uses pipe + fork
-Captures all stdout/stderr
-Writes to:
-Terminal
-Log file
-🔹 Supervisor Design
-Tracks containers in-memory
-Handles SIGCHLD
-Cleans zombie processes
-🔹 Kernel Monitor
-Uses timer_setup() for periodic sampling
-Reads /proc/<pid>/status
-Exposes via ioctl
-🔹 Scheduling Observations
-Workload	Behavior
-CPU-bound	Gets preempted
-Memory	Causes pressure
-I/O	Gets priority boost
+A clean way to understand how containers work under the hood 🚀
