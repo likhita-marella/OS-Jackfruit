@@ -11,7 +11,8 @@
  *
  * Run (needs root for namespaces + chroot):
  *   sudo ./engine supervisor ./rootfs-base &
- *   sudo ./engine start alpha ./rootfs-alpha /bin/sh
+ *   sudo ./engine start alpha ./rootfs-alpha 
+/bin/sh
  *   sudo ./engine ps
  *   sudo ./engine logs alpha
  *   sudo ./engine stop alpha
@@ -764,7 +765,7 @@ static void handle_client(supervisor_ctx_t *ctx, int client_fd)
             FILE *fp = fopen(found->log_path, "r");
             if (!fp) {
                 snprintf(resp.message, sizeof(resp.message),
-                         "(log file not yet created: %s)", found->log_path);
+                         "(log file not yet created: %.200s)", found->log_path);
             } else {
                 /* Seek to tail */
                 fseek(fp, 0, SEEK_END);
@@ -1122,3 +1123,4 @@ int main(int argc, char *argv[])
     usage(argv[0]);
     return 1;
 }
+ 
