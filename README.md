@@ -45,12 +45,19 @@ Kernel Module (monitor.ko)
 
 boilerplate/
 ├── engine.c
+
 ├── monitor.c
+
 ├── monitor_ioctl.h
+
 ├── Makefile
+
 ├── cpu_hog.c
+
 ├── memory_hog.c
+
 ├── io_pulse.c
+
 └── environment-check.sh
 
 rootfs-alpha/
