@@ -26,15 +26,25 @@ Containers are created and managed through a user-space runtime interacting with
 
 
 Client (CLI)
+
 ↓
+
 Supervisor (engine)
+
 ↓
+
 Container Process (namespaces + chroot)
+
 ↓
+
 Log Manager (pipe + fork)
+
 ↓
+
 Kernel Module (monitor.ko)
+
 ↓
+
 /dev/container_monitor
 
 
@@ -44,6 +54,7 @@ Kernel Module (monitor.ko)
 
 
 boilerplate/
+
 ├── engine.c
 
 ├── monitor.c
